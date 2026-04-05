@@ -1,0 +1,104 @@
+﻿# SwayFX Config - Dark Anime Theme
+
+### Variables
+set $mod Mod4
+set $term foot
+set $menu wofi --show drun
+set $browser firefox
+
+### SwayFX Effects
+corner_radius 12
+shadows enable
+shadow_blur_radius 20
+shadow_color #00000099
+blur enable
+blur_passes 3
+blur_radius 5
+default_dim_inactive 0.2
+
+### Colors (Dark theme)
+set $bg      #0d0d0d
+set $fg      #cdd6f4
+set $accent  #7aa2f7
+set $urgent  #f38ba8
+set $border  #313244
+
+client.focused          $accent  $bg $fg $accent $accent
+client.unfocused        $border  $bg $fg $border $border
+client.urgent           $urgent  $bg $fg $urgent $urgent
+
+### Output (غير اسم الشاشة حسب عندك)
+output * bg ~/Pictures/wallpaper.jpg fill
+
+### Input
+input type:keyboard {
+    xkb_layout us,ara
+    xkb_options grp:alt_shift_toggle
+}
+
+### Key Bindings
+bindsym $mod+Return exec $term
+bindsym $mod+d exec $menu
+bindsym $mod+q kill
+bindsym $mod+Shift+r reload
+bindsym $mod+Shift+e exec swaynag -t warning -m 'Exit?' -B 'Yes' 'swaymsg exit'
+
+# Focus
+bindsym $mod+h focus left
+bindsym $mod+j focus down
+bindsym $mod+k focus up
+bindsym $mod+l focus right
+
+# Move
+bindsym $mod+Shift+h move left
+bindsym $mod+Shift+j move down
+bindsym $mod+Shift+k move up
+bindsym $mod+Shift+l move right
+
+# Workspaces
+bindsym $mod+1 workspace number 1
+bindsym $mod+2 workspace number 2
+bindsym $mod+3 workspace number 3
+bindsym $mod+4 workspace number 4
+bindsym $mod+5 workspace number 5
+
+bindsym $mod+Shift+1 move container to workspace number 1
+bindsym $mod+Shift+2 move container to workspace number 2
+bindsym $mod+Shift+3 move container to workspace number 3
+
+# Layout
+bindsym $mod+v splitv
+bindsym $mod+b splith
+bindsym $mod+f fullscreen
+bindsym $mod+Shift+space floating toggle
+
+# Resize
+bindsym $mod+r mode "resize"
+mode "resize" {
+    bindsym h resize shrink width 10px
+    bindsym l resize grow width 10px
+    bindsym k resize shrink height 10px
+    bindsym j resize grow height 10px
+    bindsym Escape mode "default"
+}
+
+### Gaps
+gaps inner 8
+gaps outer 4
+smart_gaps on
+smart_borders on
+
+### Window Rules
+for_window [app_id=".*"] border pixel 2
+for_window [app_id="foot"] opacity 0.90
+for_window [app_id="nemo"] floating enable, resize set 900 600
+
+### Autostart
+exec_always waybar
+exec_always swaybg -i ~/Pictures/wallpaper.jpg -m fill
+exec dunst
+exec /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
+
+bar {
+    swaybar_command waybar
+}
