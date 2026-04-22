@@ -56,21 +56,4 @@ sda3  rest   / (ext4)
 passwd
 sudo passwd root
 
-# Push dotfiles to GitHub
-cd ~/dotfiles
-git remote add origin git@github.com:$GITHUB_USER/$GITHUB_REPO.git
-git branch -M main
-git push -u origin main
-```
 
-## Services enabled
-
-```
-dbus / elogind / seatd / NetworkManager / lightdm
-```
-
-## Requirements
-
-- UEFI system
-- x86_64
-- Target disk will be **wiped**
