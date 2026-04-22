@@ -7,8 +7,6 @@ Automated Void Linux installer with Sway desktop stack.
 | component | package |
 |-----------|---------|
 | WM | sway |
-| Bar | waybar |
-| Launcher | wofi |
 | Terminal | foot |
 | Notifications | mako |
 | Audio | pipewire + wireplumber |
@@ -34,11 +32,9 @@ umount -R /mnt && reboot
 
 ```bash
 DISK="/dev/sda"        # target drive — check with lsblk
-USERNAME="x7s"
+USERNAME="you"
 HOSTNAME="voidbox"
 TIMEZONE="America/New_York"
-GITHUB_USER="your-username"
-GITHUB_REPO="void-dotfiles"
 ```
 
 ## Partition layout
