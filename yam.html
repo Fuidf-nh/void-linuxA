@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YAM — Yet Another Manager</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@300;600;800&display=swap');
+
+  :root {
+    --red: #cc2200;
+    --red2: #ff3311;
+    --dim: #3a0800;
+    --bg: #0a0a0a;
+    --bg2: #111;
+    --bg3: #161616;
+    --border: #2a0500;
+    --text: #e0d0cc;
+    --muted: #664433;
+    --green: #44bb44;
+    --yellow: #ddaa22;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* ── Header ── */
+  header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg2);
+    flex-shrink: 0;
+  }
+
+  .logo {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 22px;
+    color: var(--red2);
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    line-height: 1;
+  }
+  .logo span { color: var(--muted); font-weight: 300; font-size: 11px; display: block; letter-spacing: 2px; }
+
+  .search-wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    padding: 6px 10px;
+  }
+  .search-wrap::before { content: '$/'; color: var(--red); font-size: 12px; }
+  .search-wrap input {
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 13px;
+  }
+  .search-wrap input::placeholder { color: var(--muted); }
+
+  .hdr-btns { display: flex; gap: 6px; }
+  .hdr-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: inherit;
+    font-size: 11px;
+    padding: 5px 10px;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.15s;
+  }
+  .hdr-btn:hover { border-color: var(--red); color: var(--red2); }
+  .hdr-btn.active { border-color: var(--red); color: var(--red2); background: var(--dim); }
+
+  /* ── Layout ── */
+  .layout {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* ── Sidebar ── */
+  aside {
+    width: 160px;
+    border-right: 1px solid var(--border);
+    background: var(--bg2);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+  }
+
+  .sidebar-section { padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .sidebar-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--muted);
+    padding: 0 12px 6px;
+    text-transform: uppercase;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 12px;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 12px;
+    transition: all 0.1s;
+    border-left: 2px solid transparent;
+  }
+  .nav-item:hover { color: var(--text); background: var(--bg3); }
+  .nav-item.active { color: var(--red2); border-left-color: var(--red2); background: var(--dim); }
+  .nav-item .icon { font-size: 14px; width: 16px; text-align: center; }
+  .nav-count {
+    margin-left: auto;
+    font-size: 10px;
+    color: var(--red);
+    background: var(--dim);
+    padding: 1px 5px;
+  }
+
+  /* ── Main ── */
+  main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg2);
+    flex-shrink: 0;
+  }
+
+  .sort-label { color: var(--muted); font-size: 11px; margin-right: 4px; }
+  .sort-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: inherit;
+    font-size: 11px;
+    padding: 3px 8px;
+    cursor: pointer;
+    transition: all 0.1s;
+  }
+  .sort-btn:hover, .sort-btn.active { color: var(--text); border-color: var(--muted); }
+
+  .spacer { flex: 1; }
+
+  .pkg-count { color: var(--muted); font-size: 11px; }
+
+  /* ── Package list ── */
+  .pkg-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 4px 0;
+  }
+  .pkg-list::-webkit-scrollbar { width: 4px; }
+  .pkg-list::-webkit-scrollbar-track { background: var(--bg); }
+  .pkg-list::-webkit-scrollbar-thumb { background: var(--dim); }
+
+  .pkg-row {
+    display: grid;
+    grid-template-columns: 24px 1fr 100px 80px 80px;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 12px;
+    border-bottom: 1px solid #0f0f0f;
+    cursor: pointer;
+    transition: background 0.1s;
+    animation: fadeIn 0.2s ease both;
+  }
+  .pkg-row:hover { background: var(--bg3); }
+  .pkg-row.selected { background: var(--dim); border-left: 2px solid var(--red); }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateX(-4px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+
+  .pkg-check {
+    width: 14px; height: 14px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px;
+    flex-shrink: 0;
+    transition: all 0.1s;
+  }
+  .pkg-check.checked { background: var(--red); border-color: var(--red); color: white; }
+
+  .pkg-name { font-size: 13px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pkg-name em { font-style: normal; color: var(--red2); }
+  .pkg-desc { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .pkg-version { font-size: 11px; color: #886655; text-align: right; }
+  .pkg-size { font-size: 11px; color: var(--muted); text-align: right; }
+
+  .pkg-status {
+    font-size: 10px;
+    padding: 2px 6px;
+    text-align: center;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .pkg-status.installed { color: var(--green); border: 1px solid #224422; background: #0a1a0a; }
+  .pkg-status.available { color: var(--muted); border: 1px solid var(--border); }
+  .pkg-status.update { color: var(--yellow); border: 1px solid #443300; background: #1a1100; }
+
+  /* ── Detail panel ── */
+  .detail {
+    width: 280px;
+    border-left: 1px solid var(--border);
+    background: var(--bg2);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .detail-header {
+    padding: 14px 14px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .detail-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--red2);
+    letter-spacing: 1px;
+  }
+  .detail-ver { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .detail-desc { font-size: 12px; color: var(--text); margin-top: 8px; line-height: 1.5; }
+
+  .detail-body { flex: 1; overflow-y: auto; padding: 12px 14px; }
+  .detail-body::-webkit-scrollbar { width: 3px; }
+  .detail-body::-webkit-scrollbar-thumb { background: var(--dim); }
+
+  .detail-row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #111; font-size: 11px; }
+  .detail-row .key { color: var(--muted); }
+  .detail-row .val { color: var(--text); text-align: right; max-width: 160px; word-break: break-all; }
+
+  .detail-section-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin: 14px 0 6px;
+  }
+
+  .dep-list { display: flex; flex-wrap: wrap; gap: 4px; }
+  .dep-tag {
+    font-size: 10px;
+    padding: 2px 6px;
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+
+  .detail-footer {
+    padding: 10px 14px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 6px;
+  }
+
+  .btn {
+    flex: 1;
+    padding: 8px;
+    border: none;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-install { background: var(--red); color: white; }
+  .btn-install:hover { background: var(--red2); }
+  .btn-remove { background: var(--dim); color: var(--red); border: 1px solid var(--red); }
+  .btn-remove:hover { background: var(--red); color: white; }
+  .btn-disabled { background: #1a1a1a; color: var(--muted); cursor: default; }
+
+  /* ── Status bar ── */
+  footer {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 5px 12px;
+    border-top: 1px solid var(--border);
+    background: var(--bg2);
+    font-size: 11px;
+    color: var(--muted);
+    flex-shrink: 0;
+  }
+  .status-dot { width: 6px; height: 6px; background: var(--green); border-radius: 50%; display: inline-block; margin-right: 4px; }
+  footer .cmd { color: var(--red); margin-left: auto; font-size: 11px; }
+
+  /* ── Log panel ── */
+  .log-panel {
+    display: none;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+  }
+  .log-panel.visible { display: flex; }
+  .log-output {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+    font-size: 12px;
+    line-height: 1.8;
+  }
+  .log-output::-webkit-scrollbar { width: 4px; }
+  .log-output::-webkit-scrollbar-thumb { background: var(--dim); }
+  .log-line { animation: fadeIn 0.1s ease both; }
+  .log-line.ok { color: var(--green); }
+  .log-line.err { color: var(--red2); }
+  .log-line.info { color: var(--muted); }
+  .log-line.cmd { color: var(--yellow); }
+
+  /* ── Pending bar ── */
+  .pending-bar {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 12px;
+    background: var(--dim);
+    border-top: 1px solid var(--red);
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+  .pending-bar.visible { display: flex; }
+  .pending-bar .label { color: var(--red2); }
+  .pending-bar .pkgs { color: var(--text); flex: 1; }
+  .apply-btn {
+    background: var(--red);
+    color: white;
+    border: none;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    padding: 5px 14px;
+    cursor: pointer;
+    text-transform: uppercase;
+  }
+  .apply-btn:hover { background: var(--red2); }
+  .clear-btn {
+    background: none;
+    border: 1px solid var(--muted);
+    color: var(--muted);
+    font-family: inherit;
+    font-size: 11px;
+    padding: 4px 10px;
+    cursor: pointer;
+  }
+  .clear-btn:hover { color: var(--text); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">YAM<span>yet another manager</span></div>
+  <div class="search-wrap">
+    <input type="text" id="searchInput" placeholder="search packages..." autocomplete="off">
+  </div>
+  <div class="hdr-btns">
+    <button class="hdr-btn active" onclick="setView('packages')">packages</button>
+    <button class="hdr-btn" onclick="setView('log')">log</button>
+    <button class="hdr-btn" onclick="syncRepos()">sync</button>
+  </div>
+</header>
+
+<div class="layout">
+
+  <aside>
+    <div class="sidebar-section">
+      <div class="sidebar-label">filter</div>
+      <div class="nav-item active" onclick="setFilter('all', this)">
+        <span class="icon">▤</span> all
+        <span class="nav-count" id="cnt-all">0</span>
+      </div>
+      <div class="nav-item" onclick="setFilter('installed', this)">
+        <span class="icon">✓</span> installed
+        <span class="nav-count" id="cnt-installed">0</span>
+      </div>
+      <div class="nav-item" onclick="setFilter('available', this)">
+        <span class="icon">↓</span> available
+        <span class="nav-count" id="cnt-available">0</span>
+      </div>
+      <div class="nav-item" onclick="setFilter('updates', this)">
+        <span class="icon">↑</span> updates
+        <span class="nav-count" id="cnt-updates">0</span>
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">category</div>
+      <div class="nav-item" onclick="setCategory('system', this)"><span class="icon">⚙</span> system</div>
+      <div class="nav-item" onclick="setCategory('desktop', this)"><span class="icon">▣</span> desktop</div>
+      <div class="nav-item" onclick="setCategory('dev', this)"><span class="icon">&lt;/&gt;</span> dev</div>
+      <div class="nav-item" onclick="setCategory('media', this)"><span class="icon">♪</span> media</div>
+      <div class="nav-item" onclick="setCategory('net', this)"><span class="icon">⌁</span> network</div>
+    </div>
+  </aside>
+
+  <main>
+    <!-- Packages view -->
+    <div id="view-packages" style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
+      <div class="toolbar">
+        <span class="sort-label">sort:</span>
+        <button class="sort-btn active" onclick="setSort('name', this)">name</button>
+        <button class="sort-btn" onclick="setSort('size', this)">size</button>
+        <button class="sort-btn" onclick="setSort('status', this)">status</button>
+        <div class="spacer"></div>
+        <span class="pkg-count" id="pkgCount">— packages</span>
+      </div>
+
+      <div style="display:flex;flex:1;overflow:hidden;">
+        <div class="pkg-list" id="pkgList"></div>
+
+        <div class="detail" id="detailPanel">
+          <div class="detail-header">
+            <div class="detail-name" id="dName">select a package</div>
+            <div class="detail-ver" id="dVer"></div>
+            <div class="detail-desc" id="dDesc">Click any package to view details.</div>
+          </div>
+          <div class="detail-body" id="dBody"></div>
+          <div class="detail-footer" id="dFooter">
+            <button class="btn btn-disabled">install</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="pending-bar" id="pendingBar">
+        <span class="label">pending:</span>
+        <span class="pkgs" id="pendingList"></span>
+        <button class="clear-btn" onclick="clearPending()">clear</button>
+        <button class="apply-btn" onclick="applyPending()">apply</button>
+      </div>
+    </div>
+
+    <!-- Log view -->
+    <div id="view-log" class="log-panel">
+      <div class="toolbar">
+        <span style="color:var(--muted);font-size:11px;">xbps output log</span>
+        <div class="spacer"></div>
+        <button class="sort-btn" onclick="clearLog()">clear</button>
+      </div>
+      <div class="log-output" id="logOutput"></div>
+    </div>
+  </main>
+
+</div>
+
+<footer>
+  <span><span class="status-dot"></span>repo synced</span>
+  <span id="footerInstalled"></span>
+  <span id="footerUpdates" style="color:var(--yellow)"></span>
+  <span class="cmd" id="footerCmd"></span>
+</footer>
+
+<script>
+// ── Data ──────────────────────────────────────────────────
+const PACKAGES = [
+  // installed
+  { name:'sway', ver:'1.9-1', size:'2.1M', desc:'Wayland compositor tiling window manager', status:'installed', cat:'desktop', deps:['wlroots','wayland','xwayland'] },
+  { name:'waybar', ver:'0.10.3-1', size:'1.8M', desc:'Highly customizable Wayland bar', status:'installed', cat:'desktop', deps:['gtkmm3','jsoncpp','spdlog'] },
+  { name:'foot', ver:'1.17.0-1', size:'620K', desc:'Fast, lightweight Wayland terminal', status:'installed', cat:'desktop', deps:['wayland','fcft'] },
+  { name:'wofi', ver:'1.4-1', size:'180K', desc:'App launcher for wlroots compositors', status:'installed', cat:'desktop', deps:['gtk3','wayland'] },
+  { name:'mako', ver:'1.8.0-1', size:'140K', desc:'Lightweight Wayland notification daemon', status:'installed', cat:'desktop', deps:['wayland','cairo'] },
+  { name:'pipewire', ver:'1.2.1-1', size:'4.2M', desc:'Low-latency audio/video router', status:'installed', cat:'media', deps:['dbus','alsa-lib'] },
+  { name:'wireplumber', ver:'0.5.5-1', size:'1.1M', desc:'Session/policy manager for PipeWire', status:'installed', cat:'media', deps:['pipewire','lua'] },
+  { name:'NetworkManager', ver:'1.48.2-1', size:'8.6M', desc:'Network connection manager daemon', status:'installed', cat:'net', deps:['dbus','nss','polkit'] },
+  { name:'git', ver:'2.45.1-1', size:'21M', desc:'Distributed version control system', status:'installed', cat:'dev', deps:['curl','expat','openssl'] },
+  { name:'nano', ver:'8.0-1', size:'860K', desc:'Small user-friendly terminal text editor', status:'installed', cat:'system', deps:['ncurses'] },
+  { name:'elogind', ver:'252.9-3', size:'1.9M', desc:'The logind extracted from systemd', status:'installed', cat:'system', deps:['dbus','pam'] },
+  { name:'dbus', ver:'1.14.10-1', size:'1.2M', desc:'Message bus system', status:'installed', cat:'system', deps:['expat'] },
+  { name:'polkit', ver:'124-1', size:'760K', desc:'Application-level authorization toolkit', status:'installed', cat:'system', deps:['dbus','glib'] },
+  { name:'lightdm', ver:'1.32.0-5', size:'1.4M', desc:'Cross-desktop display manager', status:'installed', cat:'desktop', deps:['dbus','pam','xcb'] },
+  { name:'base-system', ver:'0.80_1', size:'12K', desc:'Void Linux base system meta-package', status:'installed', cat:'system', deps:['bash','coreutils','util-linux'] },
+
+  // updates
+  { name:'xwayland', ver:'24.1.1-1', size:'1.6M', desc:'X server for running X clients under Wayland', status:'update', cat:'desktop', deps:['libx11','pixman','wayland'] },
+  { name:'curl', ver:'8.8.0-1', size:'740K', desc:'Command line tool for transferring data with URLs', status:'update', cat:'net', deps:['openssl','zlib'] },
+  { name:'openssl', ver:'3.3.1-1', size:'5.8M', desc:'Toolkit for TLS/SSL protocols', status:'update', cat:'system', deps:[] },
+
+  // available
+  { name:'alacritty', ver:'0.13.2-1', size:'3.2M', desc:'GPU-accelerated terminal emulator', status:'available', cat:'desktop', deps:['fontconfig','freetype'] },
+  { name:'fuzzel', ver:'1.10.0-1', size:'210K', desc:'Fast Wayland-native app launcher', status:'available', cat:'desktop', deps:['wayland','cairo','png'] },
+  { name:'swaylock', ver:'1.7.2-1', size:'180K', desc:'Screen locker for Sway', status:'available', cat:'desktop', deps:['wayland','pam','cairo'] },
+  { name:'swayidle', ver:'1.8.0-1', size:'80K', desc:'Idle management daemon for Wayland', status:'available', cat:'desktop', deps:['wayland'] },
+  { name:'grim', ver:'1.4.1-1', size:'120K', desc:'Screenshot utility for Wayland', status:'available', cat:'desktop', deps:['wayland','cairo','png'] },
+  { name:'slurp', ver:'1.5.0-1', size:'90K', desc:'Select screen region in Wayland', status:'available', cat:'desktop', deps:['wayland','cairo'] },
+  { name:'wl-clipboard', ver:'2.2.1-1', size:'100K', desc:'Command-line copy/paste for Wayland', status:'available', cat:'desktop', deps:['wayland'] },
+  { name:'brightnessctl', ver:'0.5.1-1', size:'44K', desc:'Read and control device brightness', status:'available', cat:'system', deps:[] },
+  { name:'pamixer', ver:'1.6-2', size:'56K', desc:'PulseAudio/Pipewire command-line mixer', status:'available', cat:'media', deps:['pipewire','boost'] },
+  { name:'htop', ver:'3.3.0-1', size:'320K', desc:'Interactive process viewer', status:'available', cat:'system', deps:['ncurses','hwloc'] },
+  { name:'ripgrep', ver:'14.1.0-1', size:'2.1M', desc:'Fast regex search tool', status:'available', cat:'dev', deps:[] },
+  { name:'fd', ver:'10.1.0-1', size:'1.8M', desc:'Simple, fast alternative to find', status:'available', cat:'dev', deps:[] },
+  { name:'fzf', ver:'0.54.0-1', size:'1.2M', desc:'General-purpose command-line fuzzy finder', status:'available', cat:'dev', deps:[] },
+  { name:'lf', ver:'r32-1', size:'2.4M', desc:'Terminal file manager', status:'available', cat:'system', deps:[] },
+  { name:'neovim', ver:'0.10.0-1', size:'16M', desc:'Hyperextensible Vim-based text editor', status:'available', cat:'dev', deps:['libuv','msgpack','unibilium'] },
+  { name:'firefox', ver:'127.0-1', size:'280M', desc:'Web browser by Mozilla', status:'available', cat:'net', deps:['dbus','gtk3','nss'] },
+  { name:'mpv', ver:'0.38.0-1', size:'12M', desc:'Media player based on MPlayer', status:'available', cat:'media', deps:['ffmpeg','libass','pulseaudio'] },
+  { name:'imv', ver:'4.5.0-1', size:'280K', desc:'Image viewer for Wayland/X11', status:'available', cat:'media', deps:['wayland','libpng','libjpeg'] },
+];
+
+// ── State ─────────────────────────────────────────────────
+let state = {
+  filter: 'all',
+  category: null,
+  sort: 'name',
+  search: '',
+  selected: null,
+  pending: [],   // {name, action: 'install'|'remove'}
+  view: 'packages',
+  log: [],
+};
+
+// ── Init ──────────────────────────────────────────────────
+function init() {
+  updateCounts();
+  renderList();
+  updateFooter();
+  document.getElementById('searchInput').addEventListener('input', e => {
+    state.search = e.target.value.toLowerCase();
+    renderList();
+  });
+}
+
+// ── Counts ────────────────────────────────────────────────
+function updateCounts() {
+  document.getElementById('cnt-all').textContent = PACKAGES.length;
+  document.getElementById('cnt-installed').textContent = PACKAGES.filter(p => p.status === 'installed').length;
+  document.getElementById('cnt-available').textContent = PACKAGES.filter(p => p.status === 'available').length;
+  document.getElementById('cnt-updates').textContent = PACKAGES.filter(p => p.status === 'update').length;
+}
+
+// ── Filtering ─────────────────────────────────────────────
+function filtered() {
+  let pkgs = [...PACKAGES];
+  if (state.filter === 'installed') pkgs = pkgs.filter(p => p.status === 'installed');
+  else if (state.filter === 'available') pkgs = pkgs.filter(p => p.status === 'available');
+  else if (state.filter === 'updates') pkgs = pkgs.filter(p => p.status === 'update');
+  if (state.category) pkgs = pkgs.filter(p => p.cat === state.category);
+  if (state.search) pkgs = pkgs.filter(p => p.name.includes(state.search) || p.desc.toLowerCase().includes(state.search));
+  if (state.sort === 'name') pkgs.sort((a,b) => a.name.localeCompare(b.name));
+  else if (state.sort === 'size') pkgs.sort((a,b) => parseFloat(b.size) - parseFloat(a.size));
+  else if (state.sort === 'status') pkgs.sort((a,b) => a.status.localeCompare(b.status));
+  return pkgs;
+}
+
+// ── Render list ───────────────────────────────────────────
+function renderList() {
+  const pkgs = filtered();
+  const list = document.getElementById('pkgList');
+  document.getElementById('pkgCount').textContent = `${pkgs.length} packages`;
+
+  // Highlight search
+  const q = state.search;
+  const hl = s => q ? s.replace(new RegExp(`(${q})`, 'gi'), '<em>$1</em>') : s;
+
+  list.innerHTML = pkgs.map((p, i) => {
+    const inPending = state.pending.find(x => x.name === p.name);
+    const isChecked = inPending ? 'checked' : '';
+    const statusLabel = p.status === 'update' ? 'update' : p.status;
+    return `
+    <div class="pkg-row${state.selected === p.name ? ' selected' : ''}"
+         onclick="selectPkg('${p.name}')"
+         style="animation-delay:${Math.min(i * 0.01, 0.3)}s">
+      <div class="pkg-check ${isChecked}" onclick="togglePending(event,'${p.name}')">
+        ${isChecked ? '✓' : ''}
+      </div>
+      <div>
+        <div class="pkg-name">${hl(p.name)}</div>
+        <div class="pkg-desc">${hl(p.desc)}</div>
+      </div>
+      <div class="pkg-version">${p.ver}</div>
+      <div class="pkg-size">${p.size}</div>
+      <div class="pkg-status ${p.status}">${statusLabel}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── Select package ────────────────────────────────────────
+function selectPkg(name) {
+  state.selected = name;
+  const p = PACKAGES.find(x => x.name === name);
+  if (!p) return;
+  renderList();
+
+  document.getElementById('dName').textContent = p.name;
+  document.getElementById('dVer').textContent = `v${p.ver}  ·  ${p.size}`;
+  document.getElementById('dDesc').textContent = p.desc;
+
+  const body = document.getElementById('dBody');
+  body.innerHTML = `
+    <div class="detail-row"><span class="key">status</span><span class="val pkg-status ${p.status}">${p.status}</span></div>
+    <div class="detail-row"><span class="key">category</span><span class="val">${p.cat}</span></div>
+    <div class="detail-row"><span class="key">version</span><span class="val">${p.ver}</span></div>
+    <div class="detail-row"><span class="key">size</span><span class="val">${p.size}</span></div>
+    ${p.deps.length ? `
+    <div class="detail-section-title">depends</div>
+    <div class="dep-list">${p.deps.map(d => `<span class="dep-tag">${d}</span>`).join('')}</div>` : ''}
+    <div class="detail-section-title">xbps command</div>
+    <div style="font-size:11px;color:var(--yellow);margin-top:4px;line-height:1.8;">
+      ${p.status === 'installed'
+        ? `$ xbps-remove -R ${p.name}`
+        : `$ xbps-install -S ${p.name}`}
+    </div>
+  `;
+
+  const footer = document.getElementById('dFooter');
+  if (p.status === 'installed') {
+    footer.innerHTML = `<button class="btn btn-remove" onclick="queueAction('${p.name}','remove')">remove</button>`;
+  } else if (p.status === 'update') {
+    footer.innerHTML = `<button class="btn btn-install" onclick="queueAction('${p.name}','update')">update</button>`;
+  } else {
+    footer.innerHTML = `<button class="btn btn-install" onclick="queueAction('${p.name}','install')">install</button>`;
+  }
+}
+
+// ── Pending ───────────────────────────────────────────────
+function togglePending(e, name) {
+  e.stopPropagation();
+  const idx = state.pending.findIndex(x => x.name === name);
+  if (idx >= 0) {
+    state.pending.splice(idx, 1);
+  } else {
+    const p = PACKAGES.find(x => x.name === name);
+    const action = p.status === 'installed' ? 'remove' : 'install';
+    state.pending.push({ name, action });
+  }
+  updatePendingBar();
+  renderList();
+}
+
+function queueAction(name, action) {
+  if (!state.pending.find(x => x.name === name)) {
+    state.pending.push({ name, action });
+    updatePendingBar();
+    renderList();
+  }
+}
+
+function updatePendingBar() {
+  const bar = document.getElementById('pendingBar');
+  if (state.pending.length === 0) {
+    bar.classList.remove('visible');
+    return;
+  }
+  bar.classList.add('visible');
+  document.getElementById('pendingList').textContent =
+    state.pending.map(x => `${x.action === 'remove' ? '-' : '+'}${x.name}`).join('  ');
+}
+
+function clearPending() {
+  state.pending = [];
+  updatePendingBar();
+  renderList();
+}
+
+function applyPending() {
+  if (state.pending.length === 0) return;
+  setView('log');
+  addLog('cmd', `$ sudo xbps-install -Syu && ...`);
+
+  const installs = state.pending.filter(x => x.action !== 'remove').map(x => x.name);
+  const removes  = state.pending.filter(x => x.action === 'remove').map(x => x.name);
+
+  let delay = 0;
+  const schedule = (fn, d) => { delay += d; setTimeout(fn, delay); };
+
+  if (installs.length) {
+    schedule(() => addLog('cmd', `$ sudo xbps-install -S ${installs.join(' ')}`), 100);
+    schedule(() => addLog('info', 'resolving dependencies...'), 400);
+    installs.forEach(name => {
+      schedule(() => addLog('info', `  fetching ${name}...`), 300);
+      schedule(() => addLog('ok',   `  [*] installed ${name}`), 500);
+      const p = PACKAGES.find(x => x.name === name);
+      if (p) { schedule(() => { p.status = 'installed'; }, 10); }
+    });
+  }
+  if (removes.length) {
+    schedule(() => addLog('cmd', `$ sudo xbps-remove -R ${removes.join(' ')}`), 200);
+    removes.forEach(name => {
+      schedule(() => addLog('info', `  removing ${name}...`), 300);
+      schedule(() => addLog('ok',   `  [*] removed ${name}`), 400);
+      const p = PACKAGES.find(x => x.name === name);
+      if (p) { schedule(() => { p.status = 'available'; }, 10); }
+    });
+  }
+
+  schedule(() => {
+    addLog('ok', 'done.');
+    state.pending = [];
+    updatePendingBar();
+    updateCounts();
+    renderList();
+    updateFooter();
+  }, 500);
+}
+
+// ── Log ───────────────────────────────────────────────────
+function addLog(type, text) {
+  const out = document.getElementById('logOutput');
+  const line = document.createElement('div');
+  line.className = `log-line ${type}`;
+  line.textContent = text;
+  out.appendChild(line);
+  out.scrollTop = out.scrollHeight;
+  document.getElementById('footerCmd').textContent = type === 'cmd' ? text : '';
+}
+
+function clearLog() {
+  document.getElementById('logOutput').innerHTML = '';
+}
+
+function syncRepos() {
+  setView('log');
+  addLog('cmd', '$ sudo xbps-install -S');
+  setTimeout(() => addLog('info', 'syncing repositories...'), 300);
+  setTimeout(() => addLog('ok',   '[*] https://repo-default.voidlinux.org/current'), 700);
+  setTimeout(() => addLog('ok',   '[*] https://repo-default.voidlinux.org/current/nonfree'), 1100);
+  setTimeout(() => addLog('ok',   'done.'), 1400);
+}
+
+// ── View / filter / sort ──────────────────────────────────
+function setView(v) {
+  state.view = v;
+  document.getElementById('view-packages').style.display = v === 'packages' ? 'flex' : 'none';
+  document.getElementById('view-log').classList.toggle('visible', v === 'log');
+  document.querySelectorAll('.hdr-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`.hdr-btn[onclick="setView('${v}')"]`)?.classList.add('active');
+}
+
+function setFilter(f, el) {
+  state.filter = f;
+  state.category = null;
+  document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
+  el.classList.add('active');
+  renderList();
+}
+
+function setCategory(c, el) {
+  state.category = state.category === c ? null : c;
+  state.filter = 'all';
+  document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
+  if (state.category) el.classList.add('active');
+  renderList();
+}
+
+function setSort(s, el) {
+  state.sort = s;
+  document.querySelectorAll('.sort-btn').forEach(x => x.classList.remove('active'));
+  el.classList.add('active');
+  renderList();
+}
+
+function updateFooter() {
+  const inst = PACKAGES.filter(p => p.status === 'installed').length;
+  const upd  = PACKAGES.filter(p => p.status === 'update').length;
+  document.getElementById('footerInstalled').textContent = `${inst} installed`;
+  document.getElementById('footerUpdates').textContent = upd > 0 ? `${upd} updates` : '';
+}
+
+init();
+</script>
+</body>
+</html>
